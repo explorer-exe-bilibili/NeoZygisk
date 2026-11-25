@@ -71,7 +71,7 @@ void MountArgv::cleanMemory() const {
     if (total_size > 0) {
         char* start_ptr = const_cast<char*>(m_start_address);
         // LOGV("cleaning %zu bytes at address %p...", total_size,
-             static_cast<const void*>(start_ptr));
+            //  static_cast<const void*>(start_ptr));
         memset(start_ptr, 0, total_size);
         // LOGV("memory cleaning complete.");
     }

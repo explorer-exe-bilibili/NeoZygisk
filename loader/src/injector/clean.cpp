@@ -76,11 +76,11 @@ void spoof_virtual_maps(const char *path, bool clear_write_permission) {
             // LOGV("clearing write permission for entry %s", map.path.c_str());
             int new_perms = map.perms & ~PROT_WRITE;  // Remove the write permission
             if (mprotect(addr, size, new_perms) == -1) {
-                PLOGE("remove write permission from %s [%p, %p]", map.path.c_str(), addr,
-                      (void *) map.end);
+                // PLOGE("remove write permission from %s [%p, %p]", map.path.c_str(), addr,
+                //       (void *) map.end);
             } else {
                 // LOGV("write permission removed from %s [%p, %p]", map.path.c_str(), addr,
-                     (void *) map.end);
+                    //  (void *) map.end);
             }
         }
     }
