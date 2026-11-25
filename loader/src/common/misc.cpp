@@ -47,7 +47,7 @@ bool kernel_keeps_ptrace_message() {
             return false;
         }
         bool before_5_3 = major < 5 || (major == 5 && minor < 3);
-        LOGV("kernel %s %s the ptrace event message", uts.release, before_5_3 ? "keeps" : "clears");
+        // LOGV("kernel %s %s the ptrace event message", uts.release, before_5_3 ? "keeps" : "clears");
         return before_5_3;
     }();
     return keeps;

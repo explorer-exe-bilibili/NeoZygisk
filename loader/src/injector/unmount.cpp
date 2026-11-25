@@ -99,7 +99,7 @@ std::vector<mount_info> check_zygote_traces(uint32_t info_flags) {
     if (mount_infos.empty()) {
         // This is not an error if the parsing simply found no mounts.
         // It could be an error if parsing failed, which is logged in the function itself.
-        LOGV("mount info is empty or could not be parsed.");
+        // LOGV("mount info is empty or could not be parsed.");
         return traces;
     }
 
@@ -123,8 +123,8 @@ std::vector<mount_info> check_zygote_traces(uint32_t info_flags) {
         for (const auto& info : mount_infos) {
             if (info.target == "/data/adb/modules" && starts_with(info.source, "/dev/block/loop")) {
                 kernel_su_module_source = info.source;
-                LOGV("detected KernelSU loop device module source: %s",
-                     kernel_su_module_source.c_str());
+                // LOGV("detected KernelSU loop device module source: %s",
+                    //  kernel_su_module_source.c_str());
                 break;
             }
         }
@@ -142,7 +142,7 @@ std::vector<mount_info> check_zygote_traces(uint32_t info_flags) {
     }
 
     if (traces.empty()) {
-        LOGV("no relevant mount points found to unmount.");
+        // LOGV("no relevant mount points found to unmount.");
         return traces;
     }
 
@@ -150,7 +150,7 @@ std::vector<mount_info> check_zygote_traces(uint32_t info_flags) {
     std::sort(traces.begin(), traces.end(),
               [](const mount_info& a, const mount_info& b) { return a.id > b.id; });
 
-    LOGV("found %zu mounting traces in zygote.", traces.size());
+    // LOGV("found %zu mounting traces in zygote.", traces.size());
 
     return traces;
 }

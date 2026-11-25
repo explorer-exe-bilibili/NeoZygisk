@@ -502,7 +502,7 @@ public:
         entry_point_offset = art_method_size - kPointerSize;
         data_offset = entry_point_offset - kPointerSize;
 
-        LOGV("ArtMethod size: %zu, data offset: %zu", art_method_size, data_offset);
+        // LOGV("ArtMethod size: %zu, data offset: %zu", art_method_size, data_offset);
         return true;
     }
 

@@ -166,7 +166,7 @@ DCL_HOOK_FUNC(static int, pthread_attr_setstacksize, void *target, size_t size) 
             // Because both `pthread_attr_setstacksize` and `munmap` have the same function
             // signature, we can use `musttail` to let the compiler reuse our stack frame and thus
             // `munmap` will directly return to the caller of `pthread_attr_setstacksize`.
-            LOGV("unmap libzygisk.so loaded at %p with size %zu", start_addr, block_size);
+            // LOGV("unmap libzygisk.so loaded at %p with size %zu", start_addr, block_size);
             [[clang::musttail]] return munmap(start_addr, block_size);
         }
         delete g_hook;
@@ -361,7 +361,7 @@ void HookContext::hook_jni_methods(JNIEnv *env, const char *clz, JNIMethods meth
         auto artMethod = util::art::ArtMethod::FromReflectedMethod(env, method);
         hooks.push_back(native_method);
         auto original_method = artMethod->GetData();
-        LOGV("replaced %s!%s @%p", clz, native_method.name, original_method);
+        // LOGV("replaced %s!%s @%p", clz, native_method.name, original_method);
         native_method.fnPtr = original_method;
     }
 
@@ -450,10 +450,10 @@ void hook_entry(void *start_addr, size_t block_size) {
     // the top of the reservation. soinfo::size is the real figure; trust it only when the
     // base agrees, so a mismatch keeps the old behaviour.
     if (reserved_base == reinterpret_cast<uintptr_t>(start_addr) && reserved_size > block_size) {
-        LOGV(
-            "linker reserved %zu bytes for us, %zu more than the ptracer measured; unmapping "
-            "the whole reservation",
-            reserved_size, reserved_size - block_size);
+        // LOGV(
+            // "linker reserved %zu bytes for us, %zu more than the ptracer measured; unmapping "
+            // "the whole reservation",
+            // reserved_size, reserved_size - block_size);
         g_hook->block_size = reserved_size;
     } else if (reserved_base != reinterpret_cast<uintptr_t>(start_addr)) {
         LOGW(

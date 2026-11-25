@@ -25,12 +25,12 @@ AtexitArray *findArray(const ElfParser::ElfImage &libc) {
     // which is the start of the effective AtexitArray struct in memory.
     auto p_array_start = ElfParser::findDirectSymbol<void *>(libc, "_ZL7g_array.0");
     if (p_array_start != nullptr) {
-        LOGV("found modern atexit symbol '_ZL7g_array.0' at %p", p_array_start);
+        // LOGV("found modern atexit symbol '_ZL7g_array.0' at %p", p_array_start);
         g_array = reinterpret_cast<AtexitArray *>(p_array_start);
     } else {
         // --- Fallback Method: Legacy, monolithic symbol ---
         // On older systems, the entire AtexitArray struct was exported under a single symbol name.
-        LOGV("modern atexit symbol not found, trying legacy '_ZL7g_array'");
+        // LOGV("modern atexit symbol not found, trying legacy '_ZL7g_array'");
         g_array = ElfParser::findDirectSymbol<AtexitArray>(libc, "_ZL7g_array");
     }
 
@@ -44,7 +44,7 @@ AtexitArray *findArray(const ElfParser::ElfImage &libc) {
     // garbage memory. An abnormally large size is a strong indicator of an error.
     constexpr size_t MAX_REASONABLE_ATEXIT_ENTRIES = 4096 * 16;
     if (g_array->size() < MAX_REASONABLE_ATEXIT_ENTRIES) {
-        LOGV("successfully validated atexit array at %p with size: %zu", g_array, g_array->size());
+        // LOGV("successfully validated atexit array at %p with size: %zu", g_array, g_array->size());
     } else {
         LOGE("found atexit array symbol at %p, but its size (%zu) is unreasonably large", g_array,
              g_array->size());
@@ -59,7 +59,7 @@ pthread_mutex_t *findLock(ElfParser::ElfImage &libc) {
     // its mangled local name, never in .dynsym.
     auto *lock = ElfParser::findDirectSymbol<pthread_mutex_t>(libc, "_ZL13g_atexit_lock");
     if (lock != nullptr) {
-        LOGV("found atexit lock symbol '_ZL13g_atexit_lock' at %p", lock);
+        // LOGV("found atexit lock symbol '_ZL13g_atexit_lock' at %p", lock);
         return lock;
     }
 
@@ -70,7 +70,7 @@ pthread_mutex_t *findLock(ElfParser::ElfImage &libc) {
         LOGE("failed to find the 'g_atexit_lock' symbol for atexit in libc.so");
         return nullptr;
     }
-    LOGV("found atexit lock under split symbol '%.*s'", static_cast<int>(name.size()), name.data());
+    // LOGV("found atexit lock under split symbol '%.*s'", static_cast<int>(name.size()), name.data());
     return ElfParser::findDirectSymbol<pthread_mutex_t>(libc, name);
 }
 
@@ -190,7 +190,7 @@ ScrubStatus scrubFingerprint() {
     pthread_mutex_t *lock = findLock(libc);
     if (lock == nullptr) return ScrubStatus::kNoLock;
 
-    LOGV("g_array before scrub: %s", g_array->format_state_string().c_str());
+    // LOGV("g_array before scrub: %s", g_array->format_state_string().c_str());
 
     bool locked = false;
     for (int attempt = 0; attempt < kLockAttempts && !locked; ++attempt) {
@@ -212,7 +212,7 @@ ScrubStatus scrubFingerprint() {
         LOGE("mprotect on atexit array failed with %d: %s", protect_errno, strerror(protect_errno));
     }
     if (status != ScrubStatus::kNotWritable) {
-        LOGV("g_array after scrub: %s", g_array->format_state_string().c_str());
+        // LOGV("g_array after scrub: %s", g_array->format_state_string().c_str());
     }
 
     return status;

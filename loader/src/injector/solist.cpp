@@ -10,21 +10,21 @@ namespace Linker {
 bool initialize() {
     ElfParser::ElfImage linker("/linker");
     if (!ProtectedDataGuard::setup(linker)) return false;
-    LOGV("found symbol ProtectedDataGuard");
+    // LOGV("found symbol ProtectedDataGuard");
 
     std::string_view somain_sym_name = linker.findSymbolNameByPrefix("__dl__ZL6somain");
     if (somain_sym_name.empty()) return false;
-    LOGV("found symbol name %s", somain_sym_name.data());
+    // LOGV("found symbol name %s", somain_sym_name.data());
 
     std::string_view soinfo_free_name =
         linker.findSymbolNameByPrefix("__dl__ZL11soinfo_freeP6soinfo");
     if (soinfo_free_name.empty()) return false;
-    LOGV("found symbol name %s", soinfo_free_name.data());
+    // LOGV("found symbol name %s", soinfo_free_name.data());
 
     std::string_view soinfo_unload_name =
         linker.findSymbolNameByPrefix("__dl__ZL13soinfo_unloadP6soinfo");
     if (soinfo_unload_name.empty()) return false;
-    LOGV("found symbol name %s", soinfo_unload_name.data());
+    // LOGV("found symbol name %s", soinfo_unload_name.data());
 
     // The .llvm.<hash> suffix has no fixed width; Android 17 ships a 26-character one.
     const std::string llvm_sufix(somain_sym_name.substr(strlen("__dl__ZL6somain")));
@@ -39,50 +39,50 @@ bool initialize() {
     if (solinker == nullptr) {
         solinker = ElfParser::resolveSymbolPointer<SoInfoWrapper>(linker, solist_sym_name);
         if (solinker == nullptr) return false;
-        LOGV("found symbol solist at %p", solinker);
+        // LOGV("found symbol solist at %p", solinker);
     } else {
-        LOGV("found symbol solinker at %p", solinker);
+        // LOGV("found symbol solinker at %p", solinker);
     }
 
     auto *vdso = ElfParser::resolveSymbolPointer<SoInfoWrapper>(linker, vdso_sym_name);
-    if (vdso != nullptr) LOGV("found symbol vdso at %p", vdso);
+    if (vdso != nullptr); // LOGV("found symbol vdso at %p", vdso);
 
     SoInfoWrapper::get_realpath_sym =
         ElfParser::findDirectSymbol<decltype(SoInfoWrapper::get_realpath_sym)>(
             linker, "__dl__ZNK6soinfo12get_realpathEv");
-    if (SoInfoWrapper::get_realpath_sym != nullptr) LOGV("found symbol get_realpath_sym");
+    if (SoInfoWrapper::get_realpath_sym != nullptr); // LOGV("found symbol get_realpath_sym");
 
     SoInfoWrapper::soinfo_free =
         ElfParser::findDirectSymbol<decltype(SoInfoWrapper::soinfo_free)>(linker, soinfo_free_name);
     if (SoInfoWrapper::soinfo_free == nullptr) return false;
-    LOGV("found symbol soinfo_free");
+    // LOGV("found symbol soinfo_free");
 
     SoInfoWrapper::soinfo_unload =
         ElfParser::findDirectSymbol<decltype(SoInfoWrapper::soinfo_unload)>(linker,
                                                                             soinfo_unload_name);
     if (SoInfoWrapper::soinfo_unload == nullptr) return false;
-    LOGV("found symbol soinfo_unload");
+    // LOGV("found symbol soinfo_unload");
 
     g_module_load_counter =
         ElfParser::findDirectSymbol<uint64_t>(linker, "__dl__ZL21g_module_load_counter");
-    if (g_module_load_counter != nullptr) LOGV("found symbol g_module_load_counter");
+    if (g_module_load_counter != nullptr); // LOGV("found symbol g_module_load_counter");
 
     g_module_unload_counter =
         ElfParser::findDirectSymbol<uint64_t>(linker, "__dl__ZL23g_module_unload_counter");
-    if (g_module_unload_counter != nullptr) LOGV("found symbol g_module_unload_counter");
+    if (g_module_unload_counter != nullptr); // LOGV("found symbol g_module_unload_counter");
 
     somain = ElfParser::resolveSymbolPointer<SoInfoWrapper>(linker, somain_sym_name.data());
     if (somain == nullptr) return false;
-    LOGV("found symbol somain at %p", somain);
+    // LOGV("found symbol somain at %p", somain);
 
     return findHeuristicOffsets(linker.getLibraryPath(), vdso);
 }
 
 bool findHeuristicOffsets(std::string linker_name, SoInfoWrapper *vdso) {
-    LOGV("Offsets in header [size, next, constructor_called, realpath]: [%p, %p, %p, %p]",
-         (void *) SoInfoWrapper::field_size_offset, (void *) SoInfoWrapper::field_next_offset,
-         (void *) SoInfoWrapper::field_constructor_called_offset,
-         (void *) SoInfoWrapper::field_realpath_offset);
+    // LOGV("Offsets in header [size, next, constructor_called, realpath]: [%p, %p, %p, %p]",
+        //  (void *) SoInfoWrapper::field_size_offset, (void *) SoInfoWrapper::field_next_offset,
+        //  (void *) SoInfoWrapper::field_constructor_called_offset,
+        //  (void *) SoInfoWrapper::field_realpath_offset);
 
     bool size_field_found = false;
     bool next_field_found = false;
@@ -99,9 +99,9 @@ bool findHeuristicOffsets(std::string linker_name, SoInfoWrapper *vdso) {
                 SoInfoWrapper::field_size_offset = i * sizeof(void *);
                 SoInfoWrapper::field_base_offset =
                     SoInfoWrapper::field_size_offset - sizeof(ElfW(Addr));
-                LOGV("heuristic field_size_offset is %zu * %zu = %p (base at %p)", i,
-                     sizeof(void *), reinterpret_cast<void *>(SoInfoWrapper::field_size_offset),
-                     reinterpret_cast<void *>(SoInfoWrapper::field_base_offset));
+                // LOGV("heuristic field_size_offset is %zu * %zu = %p (base at %p)", i,
+                    //  sizeof(void *), reinterpret_cast<void *>(SoInfoWrapper::field_size_offset),
+                    //  reinterpret_cast<void *>(SoInfoWrapper::field_base_offset));
                 size_field_found = true;
                 continue;
             }
@@ -114,8 +114,8 @@ bool findHeuristicOffsets(std::string linker_name, SoInfoWrapper *vdso) {
             auto next_of_solinker = *reinterpret_cast<void **>(field_of_solinker);
             if ((next_of_solinker == somain || (vdso != nullptr && next_of_solinker == vdso))) {
                 SoInfoWrapper::field_next_offset = i * sizeof(void *);
-                LOGV("heuristic field_next_offset is %zu * %zu = %p", i, sizeof(void *),
-                     reinterpret_cast<void *>(SoInfoWrapper::field_next_offset));
+                // LOGV("heuristic field_next_offset is %zu * %zu = %p", i, sizeof(void *),
+                    //  reinterpret_cast<void *>(SoInfoWrapper::field_next_offset));
                 next_field_found = true;
                 continue;
             }
@@ -135,9 +135,9 @@ bool findHeuristicOffsets(std::string linker_name, SoInfoWrapper *vdso) {
                 strcmp(linker_name.c_str(), link_map_head_of_solinker->l_name) == 0) {
                 SoInfoWrapper::field_constructor_called_offset =
                     look_forward - reinterpret_cast<uintptr_t>(solinker);
-                LOGV("heuristic field_constructor_called_offset is %p [link_map_head: %p]",
-                     reinterpret_cast<void *>(SoInfoWrapper::field_constructor_called_offset),
-                     reinterpret_cast<void *>(i * sizeof(void *)));
+                // LOGV("heuristic field_constructor_called_offset is %p [link_map_head: %p]",
+                    //  reinterpret_cast<void *>(SoInfoWrapper::field_constructor_called_offset),
+                    //  reinterpret_cast<void *>(i * sizeof(void *)));
                 constructor_called_field_found = true;
                 i = i + index_gap;
                 continue;
@@ -151,8 +151,8 @@ bool findHeuristicOffsets(std::string linker_name, SoInfoWrapper *vdso) {
         if (realpath_of_solinker->size() == linker_realpath_size) {
             if (strcmp(linker_name.c_str(), realpath_of_solinker->c_str()) == 0) {
                 SoInfoWrapper::field_realpath_offset = i * sizeof(void *);
-                LOGV("heuristic field_realpath_offset is %zu * %zu = %p", i, sizeof(void *),
-                     reinterpret_cast<void *>(SoInfoWrapper::field_realpath_offset));
+                // LOGV("heuristic field_realpath_offset is %zu * %zu = %p", i, sizeof(void *),
+                    //  reinterpret_cast<void *>(SoInfoWrapper::field_realpath_offset));
                 break;
             }
         }
@@ -166,12 +166,12 @@ void dumpSoPath(const char *needle, const char *when) {
     size_t n = 0;
     for (auto *iter = solinker; iter; iter = iter->getNext()) {
         if (iter->getPath() && strstr(iter->getPath(), needle)) {
-            LOGV("[%s] solist record %p size %zu for %s", when, (void *) iter, iter->getSize(),
-                 iter->getPath());
+            // LOGV("[%s] solist record %p size %zu for %s", when, (void *) iter, iter->getSize(),
+                //  iter->getPath());
             n++;
         }
     }
-    LOGV("[%s] %zu record(s) matching \"%s\"", when, n, needle);
+    // LOGV("[%s] %zu record(s) matching \"%s\"", when, n, needle);
 }
 
 bool dropSoPath(const char *target_path, bool unload, uintptr_t *out_base, size_t *out_size) {
@@ -204,15 +204,15 @@ bool dropSoPath(const char *target_path, bool unload, uintptr_t *out_base, size_
             }
         }
         if (!still_linked) {
-            LOGV("solist record %p went away with an earlier unload", (void *) target);
+            // LOGV("solist record %p went away with an earlier unload", (void *) target);
             continue;
         }
 
         Linker::ProtectedDataGuard guard;
         auto size = target->getSize();
         if (size == 0) continue;
-        LOGV("dropping solist record %p for %s [size %zu, constructor_called: %d]",
-             (void *) target, target->getPath(), size, target->getConstructorCalled());
+        // LOGV("dropping solist record %p for %s [size %zu, constructor_called: %d]",
+            //  (void *) target, target->getPath(), size, target->getConstructorCalled());
         if (out_base != nullptr && *out_base == 0) *out_base = target->getBase();
         if (out_size != nullptr && *out_size == 0) *out_size = size;
         target->setSize(0);
@@ -235,20 +235,20 @@ void resetCounters(size_t load, size_t unload) {
         return;
     }
     if (g_module_load_counter == nullptr || g_module_unload_counter == nullptr) {
-        LOGV("g_module counters not defined, skip reseting them");
+        // LOGV("g_module counters not defined, skip reseting them");
         return;
     }
     auto loaded_modules = *g_module_load_counter;
     auto unloaded_modules = *g_module_unload_counter;
     if (loaded_modules >= load) {
         *g_module_load_counter = loaded_modules - load;
-        LOGV("reset g_module_load_counter: [%zu -> %zu]", (size_t) loaded_modules,
-             (size_t) *g_module_load_counter);
+        // LOGV("reset g_module_load_counter: [%zu -> %zu]", (size_t) loaded_modules,
+            //  (size_t) *g_module_load_counter);
     }
     if (unloaded_modules >= unload) {
         *g_module_unload_counter = unloaded_modules - unload;
-        LOGV("reset g_module_unload_counter: [%zu -> %zu]", (size_t) unloaded_modules,
-             (size_t) *g_module_unload_counter);
+        // LOGV("reset g_module_unload_counter: [%zu -> %zu]", (size_t) unloaded_modules,
+            //  (size_t) *g_module_unload_counter);
     }
 }
 }  // namespace Linker

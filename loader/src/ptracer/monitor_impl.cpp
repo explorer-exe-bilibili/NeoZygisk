@@ -361,7 +361,7 @@ void AppMonitor::SocketHandler::HandleEvent([[maybe_unused]] EventLoop &loop, ui
             monitor_.update_status();
             break;
         case SYSTEM_SERVER_STARTED:
-            LOGV("system server started, module.prop updated");
+            // LOGV("system server started, module.prop updated");
             break;
         default:
             LOGW("SocketHandler: ignoring unknown command %d", full_msg.cmd);
@@ -509,7 +509,7 @@ void AppMonitor::SigChldHandler::handleParentEvent(int pid, int &status) {
     if (stopped_with(status, SIGTRAP, PTRACE_EVENT_FORK)) {
         long child_pid;
         if (ptrace(PTRACE_GETEVENTMSG, pid, 0, &child_pid) != -1) {
-            LOGV("parent %d forked %ld", pid, child_pid);
+            // LOGV("parent %d forked %ld", pid, child_pid);
         } else {
             PLOGE("geteventmsg on parent %d", pid);
         }
@@ -547,7 +547,7 @@ void AppMonitor::SigChldHandler::handleParentEvent(int pid, int &status) {
             // When we freeze/resume its child for injection, the kernel sends SIGCHLD to the stub.
             // By remaining attached and dropping the signal here, the stub remains safely ignorant.
             else if (pid != 1 && sig == SIGCHLD) {
-                LOGV("shielding stub process %d from SIGCHLD to prevent native crash", pid);
+                // LOGV("shielding stub process %d from SIGCHLD to prevent native crash", pid);
             }
             // Pass all other signals (like SIGTERM, SIGUSR1) back to the process unaltered.
             else {
@@ -566,7 +566,7 @@ void AppMonitor::SigChldHandler::handleParentEvent(int pid, int &status) {
  * @brief Registers and prepares a newly discovered process for execve tracking.
  */
 void AppMonitor::SigChldHandler::handleNewProcess(int pid) {
-    LOGV("new process %d discovered and attached", pid);
+    // LOGV("new process %d discovered and attached", pid);
     process_.emplace(pid);
 
     // Instruct the kernel to stop this process and notify us when it calls execve().
@@ -593,7 +593,7 @@ void AppMonitor::SigChldHandler::handleTracedProcess(int pid, int &status) {
     }
     // The kernel auto-attaches the forked child and pauses it with PTRACE_EVENT_STOP.
     else if (stopped_with(status, SIGTRAP, PTRACE_EVENT_STOP)) {
-        LOGV("process %d acknowledged auto-attach trap, configuring execve tracking", pid);
+        // LOGV("process %d acknowledged auto-attach trap, configuring execve tracking", pid);
 
         // Safely apply the execve trap now that the process is guaranteed stopped and reaped.
         if (ptrace(PTRACE_SETOPTIONS, pid, 0, PTRACE_O_TRACEEXEC) == -1) {
@@ -622,7 +622,7 @@ void AppMonitor::SigChldHandler::handleTracedProcess(int pid, int &status) {
     // If the process is irrelevant (e.g., a random system daemon), clean up and detach.
     process_.erase(pid);
     if (WIFSTOPPED(status)) {
-        LOGV("detaching irrelevant process %d", pid);
+        // LOGV("detaching irrelevant process %d", pid);
         ptrace(PTRACE_DETACH, pid, 0, 0);
     }
 }
@@ -635,7 +635,7 @@ void AppMonitor::SigChldHandler::handleTracedProcess(int pid, int &status) {
  */
 bool AppMonitor::SigChldHandler::handleExecEvent(int pid, int &status) {
     auto program = get_program(pid);
-    LOGV("process %d executed program: %s", pid, program.c_str());
+    // LOGV("process %d executed program: %s", pid, program.c_str());
 
     bool handled = false;
 
@@ -673,7 +673,7 @@ bool AppMonitor::SigChldHandler::handleExecEvent(int pid, int &status) {
         }
 
         // --- Zygote Handover Sequence ---
-        LOGV("intercepted target zygote %d, halting for injector hand-off", pid);
+        // LOGV("intercepted target zygote %d, halting for injector hand-off", pid);
 
         // Force the process into a standard SIGSTOP state.
         kill(pid, SIGSTOP);
@@ -681,7 +681,7 @@ bool AppMonitor::SigChldHandler::handleExecEvent(int pid, int &status) {
         waitpid(pid, &status, __WALL);
 
         if (stopped_with(status, SIGSTOP, 0)) {
-            LOGV("target %d halted, detaching monitor to allow injector seize", pid);
+            // LOGV("target %d halted, detaching monitor to allow injector seize", pid);
 
             // Detach, but leave the process frozen (SIGSTOP) for the injector daemon.
             if (ptrace(PTRACE_DETACH, pid, 0, SIGSTOP) == -1) {

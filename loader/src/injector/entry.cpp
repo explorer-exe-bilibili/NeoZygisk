@@ -67,12 +67,12 @@ extern "C" int __cxa_atexit(void (*func)(void*), void* arg, void* dso) {
         const char* library_path = info.dli_fname ? info.dli_fname : "<unknown library>";
         const char* symbol_name = info.dli_sname ? info.dli_sname : "<unknown symbol>";
 
-        LOGV("atexit registration BLOCKED [func, lib, sym, obj, dso]: [%p, %s, %s, %p, %p]", func,
+        // LOGV("atexit registration BLOCKED [func, lib, sym, obj, dso]: [%p, %s, %s, %p, %p]", func,
              library_path, symbol_name, arg, dso);
 
     } else {
         // dladdr() failed. We can still log the raw pointer.
-        LOGV("atexit registration BLOCKED for function at %p, no library information", func);
+        // LOGV("atexit registration BLOCKED for function at %p, no library information", func);
     }
 
     return 0;

@@ -56,7 +56,7 @@ public:
 
     ~JniAttachment() {
         if (attached_ && vm_) {
-            LOGV("detaching temporary injector thread from JVM");
+            // LOGV("detaching temporary injector thread from JVM");
             vm_->DetachCurrentThread();
         }
     }
@@ -142,7 +142,7 @@ void* run_system_server_hooks(void*) {
     ZygiskContext ctx(env, &args);
 
     // 4. Trigger the Zygisk API lifecycle
-    LOGV("triggering server_specialize_pre");
+    // LOGV("triggering server_specialize_pre");
     ctx.flags |= SERVER_FORK_AND_SPECIALIZE;
     ctx.server_specialize_pre();
 
@@ -151,7 +151,7 @@ void* run_system_server_hooks(void*) {
     // namespace nativeForkSystemServer_pre snapshots on the normal path.
     zygiskd::CacheMountNamespace(getpid());
 
-    LOGV("triggering server_specialize_post");
+    // LOGV("triggering server_specialize_post");
     ctx.server_specialize_post();
 
     // 5. Clean up the local JNI reference to prevent memory leaks in the ART

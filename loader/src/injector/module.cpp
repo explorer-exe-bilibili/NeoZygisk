@@ -315,7 +315,7 @@ bool ZygiskContext::exempt_fd(int fd) {
     if ((flags & POST_SPECIALIZE) || (flags & SKIP_CLOSE_LOG_PIPE)) return true;
     if (!can_exempt_fd()) return false;
     exempted_fds.push_back(fd);
-    LOGV("exempt fd %d", fd);
+    // LOGV("exempt fd %d", fd);
     return true;
 }
 
@@ -397,7 +397,7 @@ void ZygiskContext::run_modules_post() {
     }
 
     if (modules.size() > 0 && g_hook != nullptr) {
-        LOGV("modules unloaded: %zu/%zu", modules_unloaded, modules.size());
+        // // LOGV("modules unloaded: %zu/%zu", modules_unloaded, modules.size());
         if (modules.size() == modules_unloaded) clean_libc_trace();
         // "zygisk-module" is the memfd name (zygiskd.rs:264); b4d31ab fixed the same
         // stale needle in spoof_virtual_maps but missed this call site.
@@ -419,7 +419,7 @@ void ZygiskContext::app_specialize_pre() {
                 // Correct uid for isolated services
                 uid = st.st_uid;
             }
-            LOGV("Found isolated process [uid:%d, data_dir:%s]", uid, data_dir);
+            // LOGV("Found isolated process [uid:%d, data_dir:%s]", uid, data_dir);
             env->ReleaseStringUTFChars(args.app->app_data_dir, data_dir);
         }
     }
@@ -435,7 +435,7 @@ void ZygiskContext::app_specialize_pre() {
     if (!skip_zygiskd && info_flags == 0) info_flags = zygiskd::GetProcessFlags(uid);
 
     if ((info_flags & UNMOUNT_MASK) == UNMOUNT_MASK) {
-        LOGV("[%s] is on the denylist", process);
+        // LOGV("[%s] is on the denylist", process);
         flags |= DO_REVERT_UNMOUNT;
     }
 
@@ -475,26 +475,26 @@ void ZygiskContext::server_specialize_post() { run_modules_post(); }
 
 void ZygiskContext::nativeSpecializeAppProcess_pre() {
     process = env->GetStringUTFChars(args.app->nice_name, nullptr);
-    LOGV("pre specialize [%s]", process);
+    // LOGV("pre specialize [%s]", process);
     // App specialize does not check FD
     flags |= SKIP_CLOSE_LOG_PIPE;
     app_specialize_pre();
 }
 
 void ZygiskContext::nativeSpecializeAppProcess_post() {
-    LOGV("post specialize [%s]", process);
+    // LOGV("post specialize [%s]", process);
     app_specialize_post();
 }
 
 void ZygiskContext::nativeForkSystemServer_pre() {
-    LOGV("pre forkSystemServer");
+    // LOGV("pre forkSystemServer");
     flags |= SERVER_FORK_AND_SPECIALIZE;
 
     for (auto &map : g_hook->cached_map_infos) {
         if (map.dev == 0 && map.inode == 0 && map.offset == 0 && map.is_private &&
             map.path == "[anon:stack_and_tls:main]") {
             if ((map.perms & PROT_READ) == 0) {
-                LOGV("Skipping non-readable stack map at %p", reinterpret_cast<void *>(map.start));
+                // LOGV("Skipping non-readable stack map at %p", reinterpret_cast<void *>(map.start));
                 continue;
             }
             auto search_from = reinterpret_cast<char *>(map.start);
@@ -514,7 +514,7 @@ void ZygiskContext::nativeForkSystemServer_pre() {
 
 void ZygiskContext::nativeForkSystemServer_post() {
     if (is_child()) {
-        LOGV("post forkSystemServer");
+        // LOGV("post forkSystemServer");
         server_specialize_post();
     }
     fork_post();
@@ -522,7 +522,7 @@ void ZygiskContext::nativeForkSystemServer_post() {
 
 bool abort_zygote_unmount(const std::vector<mount_info> &traces, uint32_t info_flags) {
     if (traces.size() == 0) {
-        LOGV("abort unmounting zygote with an empty trace list");
+        // LOGV("abort unmounting zygote with an empty trace list");
         return true;
     }
     bool is_magisk = info_flags & PROCESS_ROOT_IS_MAGISK;
@@ -531,7 +531,7 @@ bool abort_zygote_unmount(const std::vector<mount_info> &traces, uint32_t info_f
             if (trace.target.rfind("/product/bin", 0) == 0) continue;
             if (!is_magisk && trace.target != "/product") continue;
             // workaround for zygote resource overlay (JingMatrix/NeoZygisk#26)
-            LOGV("abort unmounting zygote due to prohibited target: [%s]", trace.raw_info.c_str());
+            // LOGV("abort unmounting zygote due to prohibited target: [%s]", trace.raw_info.c_str());
             return true;
         }
     }
@@ -540,7 +540,7 @@ bool abort_zygote_unmount(const std::vector<mount_info> &traces, uint32_t info_f
 
 void ZygiskContext::nativeForkAndSpecialize_pre() {
     process = env->GetStringUTFChars(args.app->nice_name, nullptr);
-    LOGV("pre forkAndSpecialize [%s]", process);
+    // LOGV("pre forkAndSpecialize [%s]", process);
     flags |= APP_FORK_AND_SPECIALIZE;
 
     if (!g_hook->zygote_unmounted && g_hook->zygote_traces.size() == 0) {
@@ -550,7 +550,7 @@ void ZygiskContext::nativeForkAndSpecialize_pre() {
 
         if (!abort_zygote_unmount(g_hook->zygote_traces, info_flags)) {
             auto removal_predicate = [](const mount_info &trace) {
-                LOGV("unmounting %s (mnt_id: %u)", trace.target.c_str(), trace.id);
+                // LOGV("unmounting %s (mnt_id: %u)", trace.target.c_str(), trace.id);
                 if (umount2(trace.target.c_str(), MNT_DETACH) == 0) {
                     return true;  // Success: Mark for removal.
                 } else {
@@ -577,7 +577,7 @@ void ZygiskContext::nativeForkAndSpecialize_pre() {
 
 void ZygiskContext::nativeForkAndSpecialize_post() {
     if (is_child()) {
-        LOGV("post forkAndSpecialize [%s]", process);
+        // LOGV("post forkAndSpecialize [%s]", process);
         app_specialize_post();
     }
     fork_post();
@@ -587,7 +587,7 @@ void ZygiskContext::nativeForkAndSpecialize_post() {
 
 bool ZygiskContext::update_mount_namespace(zygiskd::MountNamespace namespace_type) {
     const char *type_str = (namespace_type == zygiskd::MountNamespace::Clean ? "Clean" : "Root");
-    LOGV("updating mount namespace to type %s", type_str);
+    // LOGV("updating mount namespace to type %s", type_str);
 
     int ns_fd = zygiskd::UpdateMountNamespace(namespace_type);
 

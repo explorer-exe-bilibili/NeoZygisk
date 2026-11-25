@@ -27,7 +27,7 @@ void* DlopenMem(int fd, int flags) {
 
     void* handle = android_dlopen_ext(JIT_CACHE_NAME, flags, &info);
     if (handle) {
-        LOGV("dlopen_ext from fd %d succeeded: handle %p", fd, handle);
+        // LOGV("dlopen_ext from fd %d succeeded: handle %p", fd, handle);
     } else {
         LOGE("dlopen_ext from fd %d failed: %s", fd, dlerror());
     }

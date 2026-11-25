@@ -34,7 +34,7 @@ MountArgv MountArgv::find(char* search_from, char* search_to) {
     for (char* p = search_from; p < search_to; ++p) {
         MountArgv mount_argv(p, search_to);
         if (mount_argv.isValid() && mount_argv.passesHeuristics()) {
-            LOGV("found a high-confidence fossil at address %p", static_cast<void*>(p));
+            // LOGV("found a high-confidence fossil at address %p", static_cast<void*>(p));
             return mount_argv;
         }
     }
@@ -43,11 +43,11 @@ MountArgv MountArgv::find(char* search_from, char* search_to) {
 
 void MountArgv::writeToMemory() const {
     if (!isValid()) {
-        LOGV("cannot write an invalid fossil to memory.");
+        // LOGV("cannot write an invalid fossil to memory.");
         return;
     }
 
-    LOGV("writing fossil data to %p...", static_cast<const void*>(m_start_address));
+    // LOGV("writing fossil data to %p...", static_cast<const void*>(m_start_address));
     char* ptr = const_cast<char*>(m_start_address);
 
     memcpy(ptr, m_source.c_str(), m_source.length() + 1);
@@ -64,16 +64,16 @@ void MountArgv::writeToMemory() const {
 
 void MountArgv::cleanMemory() const {
     if (!isValid()) {
-        LOGV("cannot clean remnants of an invalid fossil.");
+        // LOGV("cannot clean remnants of an invalid fossil.");
         return;
     }
     auto total_size = m_fossil_size + m_remnant_size;
     if (total_size > 0) {
         char* start_ptr = const_cast<char*>(m_start_address);
-        LOGV("cleaning %zu bytes at address %p...", total_size,
+        // LOGV("cleaning %zu bytes at address %p...", total_size,
              static_cast<const void*>(start_ptr));
         memset(start_ptr, 0, total_size);
-        LOGV("memory cleaning complete.");
+        // LOGV("memory cleaning complete.");
     }
 }
 
@@ -115,7 +115,7 @@ void MountArgv::dump(const char* summary) const {
         << "-------------------------------------------";
 
     // Issue a single, atomic log call with the fully formatted string.
-    LOGV("%s\n%s", summary, oss.str().c_str());
+    // LOGV("%s\n%s", summary, oss.str().c_str());
 }
 
 // --- Private Implementation ---

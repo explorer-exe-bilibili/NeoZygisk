@@ -45,7 +45,7 @@ static bool execute_remote_injection(int pid, struct user_regs_struct &regs, con
     auto libc_return_addr = find_module_return_addr(map, "libc.so");
 
     // Remotely call dlopen(lib_path, RTLD_NOW)
-    LOGV("executing remote call to dlopen(\"%s\")", lib_path);
+    // LOGV("executing remote call to dlopen(\"%s\")", lib_path);
     auto dlopen_addr = find_func_addr(local_map, map, "libdl.so", "dlopen");
     if (dlopen_addr == nullptr) {
         LOGE("could not find address of dlopen in the target process");
@@ -106,7 +106,7 @@ static bool execute_remote_injection(int pid, struct user_regs_struct &regs, con
     LOGI("successfully loaded library via remote dlopen, handle: 0x%" PRIxPTR, remote_handle);
 
     // Remotely call dlsym(handle, "entry")
-    LOGV("executing remote call to dlsym to find the 'entry' symbol");
+    // LOGV("executing remote call to dlsym to find the 'entry' symbol");
     auto dlsym_addr = find_func_addr(local_map, map, "libdl.so", "dlsym");
     if (dlsym_addr == nullptr) {
         LOGE("could not find address of dlsym in the target process");
@@ -151,11 +151,11 @@ static bool execute_remote_injection(int pid, struct user_regs_struct &regs, con
             block_size += (info.end - info.start);
         }
     }
-    LOGV("found injected library mapped from %p with total size %zu [dev %u:%u inode %lu]",
-         start_addr, block_size, major(lib_dev), minor(lib_dev), (unsigned long) lib_inode);
+    // LOGV("found injected library mapped from %p with total size %zu [dev %u:%u inode %lu]",
+        //  start_addr, block_size, major(lib_dev), minor(lib_dev), (unsigned long) lib_inode);
 
     // Remotely call our entry(start_addr, block_size, path) function
-    LOGI("calling the injector's entry function to initialize NeoZygisk");
+    // LOGI("calling the injector's entry function to initialize NeoZygisk");
     args.clear();
     args.push_back((uintptr_t) start_addr);
     args.push_back(block_size);
@@ -213,7 +213,7 @@ static bool execute_remote_injection(int pid, struct user_regs_struct &regs, con
  * @return True on successful injection, false otherwise.
  */
 bool inject_before_start(int pid, const char *lib_path, TraceMode mode, bool *hooked) {
-    LOGI("starting early library injection for pid %d, library %s", pid, lib_path);
+    // LOGI("starting early library injection for pid %d, library %s", pid, lib_path);
 
     // Backup of the target's registers, to be restored before detaching.
     struct user_regs_struct regs{}, backup{};
@@ -228,7 +228,7 @@ bool inject_before_start(int pid, const char *lib_path, TraceMode mode, bool *ho
     // We parse this structure to locate argc, argv, envp, and the auxiliary vector (auxv).
     // Ref:
     // https://cs.android.com/android/platform/superproject/main/+/main:bionic/libc/private/KernelArgumentBlock.h
-    LOGV("reading kernel argument block from stack pointer: 0x%lx", (unsigned long) regs.REG_SP);
+    // LOGV("reading kernel argument block from stack pointer: 0x%lx", (unsigned long) regs.REG_SP);
     auto sp = static_cast<uintptr_t>(regs.REG_SP);
 
     int argc;
@@ -251,7 +251,7 @@ bool inject_before_start(int pid, const char *lib_path, TraceMode mode, bool *ho
     }
     p++;  // Skip the final null pointer to get to auxv.
     auto auxv = reinterpret_cast<ElfW(auxv_t) *>(p);
-    LOGV("parsed process startup info: argc=%d, argv=%p, envp=%p, auxv=%p", argc, argv, envp, auxv);
+    // LOGV("parsed process startup info: argc=%d, argv=%p, envp=%p, auxv=%p", argc, argv, envp, auxv);
 
     // Now, scan the auxiliary vector to find AT_ENTRY. This gives us the program's
     // entry address, which is where execution will begin.
@@ -282,7 +282,7 @@ bool inject_before_start(int pid, const char *lib_path, TraceMode mode, bool *ho
     // --- Step 3: Hijack Execution Flow ---
     // We replace the program's entry point with an invalid address. This causes a SIGSEGV
     // as soon as we resume the process, allowing us to regain control at the perfect time.
-    LOGV("hijacking entry point to intercept execution");
+    // LOGV("hijacking entry point to intercept execution");
     // For arm32 compatibility, we set the last bit to the same as the entry address.
     uintptr_t break_addr = (-0x05ec1cff & ~1) | (entry_addr & 1);  // An arbitrary invalid address.
     if (!write_proc(pid, addr_of_entry_addr, &break_addr, sizeof(break_addr))) {
@@ -479,7 +479,7 @@ static bool wait_for_process(int pid, int *status) {
         PLOGE("failed to chmod temporary library %s", tmp_path);
     }
 
-    LOGV("created temporary library copy at: %s", tmp_path);
+    // LOGV("created temporary library copy at: %s", tmp_path);
     return std::string(tmp_path);
 }
 
@@ -518,7 +518,7 @@ static void arm_seccomp_events(int pid, int options) {
  */
 static bool detach_with_gki_workaround(int pid, int detach_signal) {
     int status;
-    LOGV("applying GKI 2.0 workaround (step syscall) before detach");
+    // LOGV("applying GKI 2.0 workaround (step syscall) before detach");
 
     // 1. Advance to next syscall entry/exit to clear signal-stop state
     if (ptrace(PTRACE_SYSCALL, pid, 0, 0) == -1) {
@@ -545,7 +545,7 @@ static bool detach_with_gki_workaround(int pid, int detach_signal) {
 // --- Strategy 1: PTRACE_SEIZE (Preferred) ---
 
 static bool trace_with_seize(int pid, TraceMode mode, bool *hooked) {
-    LOGV("trying PTRACE_SEIZE on pid %d", pid);
+    // LOGV("trying PTRACE_SEIZE on pid %d", pid);
 
     bool process_started = mode == TraceMode::STANDALONE || mode == TraceMode::SYSTEM_SERVER;
 
@@ -558,7 +558,7 @@ static bool trace_with_seize(int pid, TraceMode mode, bool *hooked) {
 
     if (process_started) {
         // PTRACE_SEIZE does NOT stop the process. We must explicitly interrupt it.
-        LOGV("late mode: sending PTRACE_INTERRUPT to pause the running process");
+        // LOGV("late mode: sending PTRACE_INTERRUPT to pause the running process");
         if (ptrace(PTRACE_INTERRUPT, pid, 0, 0) == -1) {
             PLOGE("ptrace(PTRACE_INTERRUPT) on pid %d", pid);
             ptrace(PTRACE_DETACH, pid, 0, 0);
@@ -596,7 +596,7 @@ static bool trace_with_seize(int pid, TraceMode mode, bool *hooked) {
             // exiting: the kernel would release the tracee either way, but only at a point
             // we no longer control, and a tracer that goes on to do anything else would
             // hold a live zygote or system_server stopped while it did.
-            LOGV("late injection complete, detaching from pid %d", pid);
+            // LOGV("late injection complete, detaching from pid %d", pid);
             if (ptrace(PTRACE_DETACH, pid, 0, 0) == -1) {
                 // The injection itself succeeded, and the tracee is released anyway once
                 // this process exits, so this is worth reporting but not failing over.
@@ -604,7 +604,7 @@ static bool trace_with_seize(int pid, TraceMode mode, bool *hooked) {
             }
             return true;
         } else {
-            LOGV("injection complete, starting signal continuation sequence");
+            // LOGV("injection complete, starting signal continuation sequence");
 
             // 2. Send SIGCONT to the process
             if (kill(pid, SIGCONT) == -1) {
@@ -628,7 +628,7 @@ static bool trace_with_seize(int pid, TraceMode mode, bool *hooked) {
 
                 // 5. Expect the actual SIGCONT delivery
                 if (STOPPED_WITH(SIGCONT, 0)) {
-                    LOGV("received expected SIGCONT");
+                    // LOGV("received expected SIGCONT");
                     // 6. Workaround + Detach
                     return detach_with_gki_workaround(pid, SIGCONT);
                 } else {
@@ -652,7 +652,7 @@ static bool trace_with_seize(int pid, TraceMode mode, bool *hooked) {
 // --- Strategy 2: PTRACE_ATTACH (Fallback) ---
 
 static bool trace_with_attach(int pid, TraceMode mode, bool *hooked) {
-    LOGV("trying PTRACE_ATTACH on pid %d", pid);
+    // LOGV("trying PTRACE_ATTACH on pid %d", pid);
 
     // Classic attach. This sends SIGSTOP to the process immediately.
     if (ptrace(PTRACE_ATTACH, pid, 0, 0) == -1) {

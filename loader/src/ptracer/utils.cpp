@@ -253,9 +253,9 @@ void *find_func_addr(const std::vector<MapInfo> &local_info,
     }
 
     uintptr_t remote_addr = remote_base + (local_sym - local_base);
-    LOGV("found remote %s!%s at 0x%" PRIxPTR " (local base 0x%" PRIxPTR ", remote base 0x%" PRIxPTR
-         ")",
-         module.data(), func.data(), remote_addr, local_base, remote_base);
+    // LOGV("found remote %s!%s at 0x%" PRIxPTR " (local base 0x%" PRIxPTR ", remote base 0x%" PRIxPTR
+        //  ")",
+        //  module.data(), func.data(), remote_addr, local_base, remote_base);
 
     return (void *) remote_addr;
 }
@@ -283,7 +283,7 @@ uintptr_t push_string(int pid, struct user_regs_struct &regs, const char *str) {
         LOGE("failed to write string '%s' to remote process", str);
         return 0;  // Return 0 on failure.
     }
-    LOGV("pushed string \"%s\" to 0x%" PRIxPTR, str, remote_addr);
+    // LOGV("pushed string \"%s\" to 0x%" PRIxPTR, str, remote_addr);
     return remote_addr;
 }
 
@@ -309,8 +309,8 @@ uintptr_t remote_call(int pid, struct user_regs_struct &regs, uintptr_t func_add
                       uintptr_t return_addr, std::vector<long> &args, bool *ok) {
     if (ok) *ok = false;
     align_stack(regs);
-    LOGV("calling remote function 0x%" PRIxPTR " with %zu args, return to 0x%" PRIxPTR, func_addr,
-         args.size(), return_addr);
+    // LOGV("calling remote function 0x%" PRIxPTR " with %zu args, return to 0x%" PRIxPTR, func_addr,
+        //  args.size(), return_addr);
 
 #if defined(__x86_64__)
     // ABI: rdi, rsi, rdx, rcx, r8, r9, then stack
@@ -423,7 +423,7 @@ uintptr_t remote_call(int pid, struct user_regs_struct &regs, uintptr_t func_add
 
     // We expect the tracee to stop at our fake return address.
     if (WIFSTOPPED(status) && static_cast<uintptr_t>(regs.REG_IP) == return_addr) {
-        LOGV("remote call returned, result: 0x%" PRIXPTR, (uintptr_t) regs.REG_RET);
+        // LOGV("remote call returned, result: 0x%" PRIXPTR, (uintptr_t) regs.REG_RET);
         if (ok) *ok = true;
         return regs.REG_RET;
     } else {
@@ -528,7 +528,7 @@ void wait_for_trace(int pid, int *status, int flags) {
 
         // The event itself is the point: raising it overwrote ptrace_message with zero.
         if (*status >> 8 == (SIGTRAP | (PTRACE_EVENT_SECCOMP << 8))) {
-            LOGV("seccomp event on pid %d cleared its ptrace event message", pid);
+            // LOGV("seccomp event on pid %d cleared its ptrace event message", pid);
             tracee_skip_syscall(pid);
             ptrace(PTRACE_CONT, pid, 0, 0);
             continue;
